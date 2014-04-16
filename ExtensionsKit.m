@@ -1,6 +1,7 @@
 #import "ExtensionsKit.h"
 
 #import <objc/runtime.h>
+#import <QuartzCore/QuartzCore.h>
 
 @implementation UIView (UTILS)
 
@@ -339,6 +340,32 @@
 
 @end
 
+@implementation NSCharacterSet (Extended)
+
+- (NSArray *)arrayStringsFromCharacters
+{
+    NSMutableArray *array = [NSMutableArray array];
+    for (int plane = 0; plane <= 16; plane++)
+    {
+        if ([self hasMemberInPlane:plane])
+        {
+            UTF32Char c;
+            for (c = plane << 16; c < (plane+1) << 16; c++)
+            {
+                if ([self longCharacterIsMember:c])
+                {
+                    UTF32Char c1 = OSSwapHostToLittleInt32(c); // To make it byte-order safe
+                    NSString *s = [[NSString alloc] initWithBytes:&c1 length:4 encoding:NSUTF32LittleEndianStringEncoding];
+                    [array addObject:s];
+                }
+            }
+        }
+    }
+    return [array copy];
+}
+
+@end
+
 @implementation NSLocale (Misc)
 
 + (BOOL)timeIs24HourFormat
@@ -346,11 +373,35 @@
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     [formatter setDateStyle:NSDateFormatterNoStyle];
     [formatter setTimeStyle:NSDateFormatterShortStyle];
-    NSString *dateString = [formatter stringFromDate:[NSDate date]];
-    NSRange amRange = [dateString rangeOfString:[formatter AMSymbol]];
-    NSRange pmRange = [dateString rangeOfString:[formatter PMSymbol]];
-    BOOL is24Hour = amRange.location == NSNotFound && pmRange.location == NSNotFound;
+    NSString *dateString       = [formatter stringFromDate:[NSDate date]];
+    NSRange amRange            = [dateString rangeOfString:[formatter AMSymbol]];
+    NSRange pmRange            = [dateString rangeOfString:[formatter PMSymbol]];
+    BOOL is24Hour              = amRange.location == NSNotFound && pmRange.location == NSNotFound;
     return is24Hour;
 }
 
-@end;
+- (NSArray *)alphabet
+{
+    NSCharacterSet *charset    = [self objectForKey:NSLocaleExemplarCharacterSet];
+    NSArray *chars             = [charset arrayStringsFromCharacters];
+    NSMutableArray *alphabet   = [NSMutableArray new];
+    for (NSUInteger i = 0; i < chars.count; i++)
+    {
+        unichar symbol             = [[chars[i] capitalizedString] characterAtIndex:0];
+        NSValue *value             = [[NSValue alloc] initWithBytes:&symbol
+                                                                    objCType:@encode(unichar)];
+            [alphabet addObject:value];
+    }
+    return [alphabet copy];
+}
+
+@end
+
+@implementation UIApplication (Extended)
+
+- (CGFloat)shortVersion
+{
+    return [[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"] floatValue];
+}
+
+@end

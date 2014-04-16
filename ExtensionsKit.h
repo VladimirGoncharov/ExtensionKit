@@ -74,7 +74,7 @@ typedef NS_ENUM(NSUInteger, UIViewBorderLine)
 
 @end
 
-@interface NSDictionary (WRK)
+@interface NSDictionary (UTILS)
 
 - (id)objectForKeyOrDefault:(id)aKey
                    aDefault:(id)aDefault;
@@ -102,8 +102,22 @@ typedef NS_ENUM(NSUInteger, UIViewBorderLine)
 
 @end
 
-@interface NSLocale (Misc)
+@interface NSCharacterSet (UTILS)
+
+- (NSArray *)arrayStringsFromCharacters;
+
+@end
+
+@interface NSLocale (UTILS)
 
 + (BOOL)timeIs24HourFormat;
+
+- (NSArray *)alphabet;
+
+@end
+
+@interface UIApplication (UTILS)
+
+- (CGFloat)shortVersion;
 
 @end
